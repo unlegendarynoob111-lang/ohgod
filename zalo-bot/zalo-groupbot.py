@@ -2,7 +2,12 @@
 """
 NexEV Zalo Group Bot (Zalo Bot Platform - chinh thuc, bot.zaloplatforms.com)
 - Thong bao don hang: do Apps Script code.gs day thang vao nhom (khong qua bot nay)
-- Bot nay: nghe tin nhan trong nhom (khi duoc @nhac) + DM 1-1, tra loi FAQ
+- Bot nay: nghe tin nhan trong nhom (khi duoc @nhac / reply / lenh) + DM 1-1, tra loi FAQ
+
+API shape (theo docs 10/2026):
+  getUpdates -> {"ok":true,"result":{"event_name","message":{message_id,date,message_type,
+                 from:{id,display_name,is_bot},chat:{id,chat_type:PRIVATE|GROUP},text}}}
+  result la OBJECT (1 su kien / lan goi), KHONG co offset -> dedupe bang message_id
 Chay:  python zalo-groupbot.py          (chat listener)
        python zalo-groupbot.py test     (kiem tra token + gui tin test vao nhom)
 """
@@ -48,12 +53,12 @@ FAQ = [
     (("chào", "xin chao", "hello", "hi ", "alo"), "Chào bạn! 👋 Mình là bot NexEV — trụ sạc cá nhân AC 7kW. Bạn cần hỏi giá, bảo hành, lắp đặt hay chuẩn cổng? (Hotline: 0818 574 833)"),
     (("giá", "gia ", "bao nhiêu", "bao nhiu", "price", "tiền"), "💰 NexEV có 2 bản:\n• Bản DI ĐỘNG 3.5kW — cắm thẳng ổ điện thường, mang theo trong xe\n• Bản CỐ ĐỊNH 7kW — sạc cổng tại nhà, đấu aptomat phụ + dây 2×6mm²\nGiá chi tiết xem tại ohgod.tech hoặc gọi 0818 574 833!"),
     (("bảo hành", "bao hanh", "warranty", "bảo hanh"), "🛡️ Bảo hành 1–2 năm tùy bản sản phẩm. Chi tiết gọi 0818 574 833."),
-    (("lắp", "đấu", "lap dat", "aptomat", "aptomat", "cài đặt", " lắp", " đấu"), "🔧 Bản 3.5kW: cắm thẳng ổ điện thường, không cần đấu gì.\nBản 7kW: cần đầu nối aptomat phụ + dây điện 2×6mm² — kỹ thuật NexEV hỗ trợ hướng dẫn. Gọi 0818 574 833!"),
+    (("lắp", "đấu", "lap dat", "aptomat", "cài đặt", " lắp", " đấu"), "🔧 Bản 3.5kW: cắm thẳng ổ điện thường, không cần đấu gì.\nBản 7kW: cần đầu nối aptomat phụ + dây điện 2×6mm² — kỹ thuật NexEV hỗ trợ hướng dẫn. Gọi 0818 574 833!"),
     (("adapter", "chuyển ổ", "chuyển cổng", "chuan", "chuẩn cổng", "type 2", "gb/t", "cổng"), "🔌 Bộ NexEV hỗ trợ 2 chuẩn phổ biến nhất VN:\n• Type 2 — sạc full 7kW\n• GB/T — sạc 3.3kW\nXe dùng cổng khác? Gọi 0818 574 833 để NexEV kiểm tra & tư vấn adapter phù hợp."),
     (("ship", "giao hàng", "miễn phí", "mien phi"), "🚚 MIỄN PHÍ SHIP toàn quốc! Đặt tại ohgod.tech hoặc gọi 0818 574 833."),
     (("thử", "dùng thử", "dung thu", "cắm thử", "cam thu", "test"), "⚡ Có chương trình CẮM THỬ SẠC — dùng thật rồi hẵng quyết. Chi tiết gọi 0818 574 833."),
     (("bao lâu", "bao lau", "mấy tiếng", "may tieng", "thời gian sạc", "thoi gian sac", "sạc lâu", "sac lau"), "⏱️ Ví dụ VinFast VF 6:\n• 7kW (Type 2): 5–7 giờ full\n• 3.3kW (GB/T): 10–14 giờ\nTùy dòng xe & mức pin. Hỏi riêng xe của bạn: gọi 0818 574 833."),
-    (("xe nào", "xe nao", "hỗ trợ xe", "ho tro xe", "vinfast", "vin", "byd", "mercedes", "mg", "omoda"), "🚗 Sạc được hầu hết xe điện tại VN:\n• VinFast: VF 3 → VF 9, Minio Green\n• BYD: Dolphin, Atto 3, Seal\n• Omoda E5, MG4, MG ZS EV, Mercedes...\nBản di động cắm ổ điện là sạc được MỌI dòng xe điện."),
+    (("xe nào", "xe nao", "hỗ trợ xe", "ho tro xe", "vinfast", "vin ", "byd", "mercedes", "mg", "omoda"), "🚗 Sạc được hầu hết xe điện tại VN:\n• VinFast: VF 3 → VF 9, Minio Green\n• BYD: Dolphin, Atto 3, Seal\n• Omoda E5, MG4, MG ZS EV, Mercedes...\nBản di động cắm ổ điện là sạc được MỌI dòng xe điện."),
     (("hotline", "số điện thoại", "so dien thoai", "liên hệ", "lien he", "contact", "gọi", "goi"), "📞 Hotline NexEV: 0818 574 833 (gọi/zalo đều được)!"),
     (("đặt", "mua", "order", "đăng ký", "dang ky", "website", "web"), "🛒 Đặt nhanh tại ohgod.tech (điền form, NexEV gọi lại) hoặc gọi 0818 574 833."),
     (("cảm ơn", "cam on", "thanks", "thank"), "Không có gì! ⚡ Cần gì cứ hỏi, hoặc gọi 0818 574 833 nha."),
@@ -95,7 +100,7 @@ def load_state():
         with open(STATE_PATH, encoding="utf-8") as f:
             return json.load(f)
     except (OSError, ValueError):
-        return {"offset": 0, "seen": []}
+        return {"seen": []}
 
 
 def save_state(st):
@@ -125,20 +130,26 @@ def api(token, method, payload=None, timeout=60):
         return {"ok": False, "error": str(e)}
 
 
-def parse_update(item):
-    """Do hinh dang update co the doi — boc tach phong thu."""
-    msg = item.get("message") or item.get("msg") or item
+def parse_event(evt):
+    """Event shape chinh thuc: {event_name, message:{message_id,date,from,chat,text,...}}"""
+    msg = evt.get("message") or {}
     chat = msg.get("chat") or {}
-    chat_id = str(chat.get("id") or msg.get("chat_id") or item.get("chat_id") or "")
-    text = str(msg.get("text") or item.get("text") or "")
-    ctype = str(chat.get("chat_type") or msg.get("chat_type") or item.get("chat_type") or "").upper()
-    sender = msg.get("from") or msg.get("user") or {}
-    sender_name = (sender.get("display_name") or sender.get("displayName")
-                   or sender.get("name") or sender.get("username") or "Bạn")
-    uid = item.get("update_id") or item.get("updateId")
-    ts = str(msg.get("created_at") or msg.get("date") or msg.get("sendDttm") or msg.get("timestamp") or "")
-    return {"uid": uid, "chat_id": chat_id, "text": text, "group": "GROUP" in ctype,
-            "sender": sender_name, "key": chat_id + "|" + text + "|" + ts}
+    chat_id = str(chat.get("id") or msg.get("chat_id") or "")
+    text = str(msg.get("text") or msg.get("caption") or "")
+    ctype = str(chat.get("chat_type") or msg.get("chat_type") or "").upper()
+    frm = msg.get("from") or {}
+    sender = str(frm.get("display_name") or frm.get("name") or "Bạn")
+    sender_id = str(frm.get("id") or "")
+    sender_is_bot = bool(frm.get("is_bot"))
+    mid = str(msg.get("message_id") or msg.get("messageId") or "")
+    reply_to_bot = False
+    reply = msg.get("reply_message") or msg.get("reply_to") or msg.get("quoted_message")
+    if isinstance(reply, dict):
+        rf = reply.get("from") or {}
+        reply_to_bot = bool(rf.get("is_bot"))
+    return {"mid": mid, "chat_id": chat_id, "text": text, "group": "GROUP" in ctype,
+            "sender": sender, "sender_id": sender_id, "sender_is_bot": sender_is_bot,
+            "reply_to_bot": reply_to_bot}
 
 
 def answer(text):
@@ -160,50 +171,65 @@ def run_listener():
     cfg = load_config()
     token = cfg["token"]
     st = load_state()
-    offset = st.get("offset", 0)
-    seen = list(st.get("seen", []))[-400:]
+    seen = list(st.get("seen", []))[-250:]
     seen_set = set(seen)
 
     me = api(token, "getMe")
-    username = cfg.get("bot_username") or ""
-    if me.get("ok"):
-        r = me.get("result") or {}
-        username = username or str(r.get("username") or r.get("user_name") or r.get("name") or "")
-        log("Bot online: " + json.dumps(r, ensure_ascii=False)[:200])
-    else:
+    if not me.get("ok"):
         log("⚠️ getMe lỗi: " + json.dumps(me, ensure_ascii=False)[:200] + " — kiểm tra token!")
         sys.exit(1)
-    if username:
+    r = me.get("result") or {}
+    if isinstance(r, dict):
+        my_id = str(r.get("id") or r.get("bot_id") or "")
+        username = str(r.get("username") or r.get("user_name") or "")
+        display = str(r.get("display_name") or r.get("name") or r.get("full_name") or "")
+    else:
+        my_id, username, display = "", "", ""
+    log("Bot online: id=" + my_id + " name=" + (display or username) + " getMe=" + json.dumps(r, ensure_ascii=False)[:200])
+
+    if username and not cfg.get("bot_username"):
         cfg["bot_username"] = username
         save_config(cfg)
 
-    mention = ("@" + username.lower()) if username else None
-    log("Đang nghe tin nhắn... (nhóm: gõ @" + (username or "tên_bot") + " + câu hỏi | DM: hỏi thẳng)")
+    mentions = []
+    if username:
+        mentions.append(("@" + username).lower())
+    if display:
+        mentions.append(("@" + display).lower())
+
+    log("Đang nghe tin nhắn... (nhóm: @nhắc/reply bot | DM: hỏi thẳng)")
     if not cfg.get("group_chat_id"):
-        log("ℹ️ Chưa có group_chat_id — thêm bot vào NHÔM rồi gõ @{} trong nhóm, bot tự lưu ID nhóm.".format(username or "tên_bot"))
+        log("ℹ️ Chưa có group_chat_id — thêm bot vào NHÓM rồi @nhắc nó trong nhóm, bot tự lưu ID nhóm.")
 
     while True:
         try:
-            resp = api(token, "getUpdates", {"offset": offset, "limit": 10, "timeout": 50}, timeout=70)
+            resp = api(token, "getUpdates", {"timeout": "50"}, timeout=70)
             if not resp.get("ok"):
                 log("getUpdates lỗi: " + json.dumps(resp, ensure_ascii=False)[:150])
                 time.sleep(5)
                 continue
-            items = resp.get("result") or []
-            max_uid = None
-            for item in items:
-                u = parse_update(item)
-                if u["uid"] is not None:
-                    try:
-                        max_uid = max(max_uid or 0, int(u["uid"]))
-                    except (TypeError, ValueError):
-                        pass
-                if not u["chat_id"] or not u["text"]:
+            result = resp.get("result")
+            if isinstance(result, list):
+                events = result
+            elif isinstance(result, dict):
+                events = [result]
+            else:
+                events = []
+
+            dirty = False
+            for evt in events:
+                u = parse_event(evt if isinstance(evt, dict) else {})
+                if not u["mid"] or not u["chat_id"]:
                     continue
-                if u["key"] in seen_set:
+                if u["mid"] in seen_set:
                     continue
-                seen_set.add(u["key"])
-                seen.append(u["key"])
+                seen_set.add(u["mid"])
+                seen.append(u["mid"])
+                dirty = True
+                if u["sender_is_bot"] and u["sender_id"] == my_id:
+                    continue  # tin cua chinh bot
+                if not u["text"]:
+                    continue
                 log("[{}] {}: {}".format("NHÓM" if u["group"] else "DM", u["sender"], u["text"][:80]))
 
                 # tu luu id nhom lan dau tien
@@ -212,21 +238,18 @@ def run_listener():
                     save_config(cfg)
                     log("🔔 ĐÃ LƯU ID NHÓM = " + u["chat_id"] + " (dán vào Script Properties ZALO_GROUP_CHAT_ID)")
 
-                is_group = u["group"]
-                mentioned = bool(mention and mention in u["text"].lower())
+                mentioned = any(m in u["text"].lower() for m in mentions)
                 is_cmd = u["text"].lstrip().startswith("/")
-                if is_group and not (mentioned or is_cmd):
-                    continue  # trong nhom: chi tra loi khi duoc @nhac hoac /lenh
+                if u["group"] and not (mentioned or u["reply_to_bot"] or is_cmd):
+                    continue  # trong nhom: chi tra loi khi @nhac / reply bot / /lenh
                 reply = answer(u["text"])
-                r = send(token, u["chat_id"], reply)
-                log("  → trả lời " + ("OK" if r.get("ok") else json.dumps(r, ensure_ascii=False)[:120]))
+                rr = send(token, u["chat_id"], reply)
+                log("  → trả lời " + ("OK" if rr.get("ok") else json.dumps(rr, ensure_ascii=False)[:120]))
 
-            if max_uid is not None:
-                offset = max_uid + 1
-            if len(seen) > 400:
-                seen = seen[-200:]
-            st = {"offset": offset, "seen": seen[-200:]}
-            save_state(st)
+            if dirty:
+                if len(seen) > 250:
+                    seen = seen[-150:]
+                save_state({"seen": seen[-150:]})
         except KeyboardInterrupt:
             log("Dừng bot.")
             break
@@ -247,7 +270,7 @@ def run_test():
         r = send(token, cfg["group_chat_id"], "✅ Bot NexEV đã kết nối nhóm — từ giờ đơn mới + câu hỏi của mọi người sẽ được phản hồi ở đây!")
         log("Gửi tin test vào nhóm: " + ("OK" if r.get("ok") else json.dumps(r, ensure_ascii=False)[:200]))
     else:
-        log("Chưa có group_chat_id — thêm bot vào nhóm, gõ @tên_bot trong nhóm để bot tự lưu ID.")
+        log("Chưa có group_chat_id — thêm bot vào nhóm, @nhắc nó trong nhóm để bot tự lưu ID.")
 
 
 if __name__ == "__main__":
