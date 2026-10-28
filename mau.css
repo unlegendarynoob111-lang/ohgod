@@ -144,3 +144,69 @@ body.lightbox-open{overflow:hidden}
 .simple-carousel .carousel-slide,.marquee-set img{cursor:zoom-in}
 @media(max-width:620px){.image-lightbox{padding:14px}.image-lightbox img{max-width:96vw;max-height:78vh;border-radius:18px}.image-lightbox-close{top:12px;right:12px}}
 
+
+
+/* === mau-3 hero upgrade: nhan manh 2 kieu sac + tuong thich xe === */
+.simple-page .simple-hero .lead{font-size:17px;line-height:1.6;max-width:470px}
+.simple-page .simple-hero .lead strong{color:#fff;font-weight:800}
+.simple-page .simple-hero .lead strong + br,
+.simple-page .simple-hero .lead br{display:none}
+/* br chi xuong dong tren mobile */
+@media(max-width:620px){
+  .simple-page .simple-hero .lead br{display:block}
+  .simple-page .simple-hero .lead{font-size:16px}
+}
+/* compatible line: de hon cho phan "Tương thích..." */
+.simple-page .simple-hero .lead{white-space:pre-line}
+.simple-page .simple-hero .lead{font-weight:400;color:#c6d4e2}
+@media(max-width:620px){.simple-page .simple-hero .lead{color:#dce8f3}}
+
+/* h1 nhan manh dong 2 = USP chinh */
+.simple-page .simple-hero h1{letter-spacing:-.06em}
+.simple-page .simple-hero h1 em{color:var(--lime);font-weight:800}
+
+
+/* === mau-3 v2: hero-sub + compat section + cards chi tiet === */
+.simple-page .simple-hero .hero-sub{margin-top:16px;font-size:14px;line-height:1.6;color:#9db3c7;max-width:520px}
+.simple-page .simple-hero .hero-sub strong{color:#fff;font-weight:700}
+.simple-page .simple-hero .hero-call-group{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.simple-page .simple-hero .simple-call.is-zalo{color:var(--lime);border-bottom-color:var(--lime)}
+
+/* compat section */
+.simple-compat{padding:88px 0;background:#fff}
+.simple-compat-list{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:0}
+.simple-compat-list li{padding:13px 0;border-top:1px solid #e3e9ee;font-size:15px;color:#33414e}
+.simple-compat-list li strong{color:var(--ink);font-weight:800}
+.compat-cards{display:grid;gap:14px;margin-bottom:18px}
+.compat-card{padding:20px 22px;border-radius:18px;background:#edf1f3;border:1px solid #dde5ea}
+.compat-card b{display:block;font-size:34px;letter-spacing:-.06em;color:var(--blue);line-height:1}
+.compat-card span{display:block;margin-top:8px;font-size:15px;font-weight:700;color:var(--ink)}
+.compat-card small{display:block;margin-top:5px;font-size:13px;color:#586875}
+.compat-card.is-blue{background:var(--blue);border-color:var(--blue);color:#fff}
+.compat-card.is-blue b{color:var(--lime)}
+.compat-card.is-blue span{color:#fff}
+.compat-card.is-blue small{color:rgba(255,255,255,.78)}
+.compat-note{margin:14px 0 0;font-size:13px;color:#586875;line-height:1.55}
+
+/* mode-note trong simple-mode */
+.simple-mode .mode-note{display:block;margin-top:8px;font-size:13px;color:var(--blue);font-weight:700}
+.simple-mode p{margin-bottom:6px}
+
+/* order-note + em trong simple-prices */
+.order-note{margin:14px 0 0;font-size:13px;line-height:1.6;color:#586875;max-width:430px}
+.order-note strong{color:var(--ink)}
+.simple-prices em{display:block;margin-top:8px;font-size:12.5px;font-style:normal;color:#586875;line-height:1.5}
+.simple-prices .selected em{color:rgba(255,255,255,.82)}
+
+/* stats 4 cot */
+.simple-stats-grid{grid-template-columns:repeat(4,1fr)}
+@media(max-width:900px){.simple-stats-grid{grid-template-columns:repeat(2,1fr)}.simple-stats-grid div{border-bottom:1px solid rgba(17,38,63,.15)}}
+@media(max-width:620px){
+  .simple-stats-grid{grid-template-columns:1fr}
+  .simple-page .simple-hero .hero-sub{font-size:13px}
+  .compat-cards{gap:10px}
+  .compat-card{padding:16px 18px}
+  .compat-card b{font-size:28px}
+}
+@media(max-width:900px){.simple-compat{padding:70px 0}}
+@media(max-width:620px){.simple-compat{padding:56px 0}.simple-compat-list li{font-size:14px}}
