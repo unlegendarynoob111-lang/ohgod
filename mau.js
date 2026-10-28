@@ -136,13 +136,23 @@
       // === GUI ===
       btn.disabled=true;btn.textContent='Đang gửi…';
       try{
-        await fetch(endpoint,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({
+        const rp = await fetch(endpoint,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({
           created_at:new Date().toISOString(),
           name, phone, model, city, note,
           source:location.pathname,
           ua: navigator.userAgent.slice(0,100),
           submittedAt: Date.now()
         })});
+        let srvOk = rp.ok, srvMsg = '';
+        try{
+          const j = await rp.json();
+          if (j && typeof j.ok === 'boolean') { srvOk = j.ok; if(!j.ok) srvMsg = String(j.error || 'Không hợp lệ.'); }
+        }catch(_){}
+        if (!srvOk) {
+          status.textContent = (srvMsg ? srvMsg + ' ' : 'Chưa gửi được. ') + 'Gọi 0818 574 833 để được hỗ trợ ngay.';
+          status.className = 'form-status show bad';
+          return;
+        }
         pushRate();
         try{ localStorage.setItem(dupKey, String(Date.now())); }catch(e){}
         status.textContent='Đã nhận thông tin. NexEV sẽ gọi lại trong hôm nay.';

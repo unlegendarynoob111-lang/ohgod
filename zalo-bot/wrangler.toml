@@ -1,0 +1,10 @@
+name = "nexev-zalo-bot"
+main = "worker.js"
+compatibility_date = "2026-10-28"
+
+# Secrets (set bằng: npx wrangler secret put <NAME>)
+# - TG_BOT_TOKEN: token từ @BotFather
+# - TG_CHAT_ID: chat id của bạn
+# - ZALO_OA_TOKEN: access token từ Zalo OA (nếu dùng)
+# - ZALO_OA_USER_ID: user_id Zalo cá nhân (nếu dùng)
+# - ZALO_VERIFY_TOKEN: token verify webhook Zalo (nếu dùng)
