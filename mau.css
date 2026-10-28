@@ -123,3 +123,6 @@ body{font-size:16px;line-height:1.55}
 .carousel-meta b{color:var(--lime);font-size:11px;letter-spacing:.08em}.carousel-meta span{font-size:12px;font-weight:700}
 .carousel-dots{left:auto;right:16px;bottom:20px}
 @media(max-width:620px){.carousel-meta{left:12px;bottom:12px;padding:8px 10px}.carousel-meta span{font-size:11px}.carousel-dots{right:12px;bottom:16px}}
+
+.simple-carousel{position:relative}
+
