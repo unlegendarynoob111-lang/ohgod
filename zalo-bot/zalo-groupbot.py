@@ -205,6 +205,8 @@ def run_listener():
         try:
             resp = api(token, "getUpdates", {"timeout": "50"}, timeout=70)
             if not resp.get("ok"):
+                if resp.get("error_code") == 408 or resp.get("description") == "Request timeout":
+                    continue  # long-poll het gio, khong co su kien moi
                 log("getUpdates lỗi: " + json.dumps(resp, ensure_ascii=False)[:150])
                 time.sleep(5)
                 continue
