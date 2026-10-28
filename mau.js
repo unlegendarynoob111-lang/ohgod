@@ -1,4 +1,161 @@
-(()=>{const io='IntersectionObserver'in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12,rootMargin:'0px 0px -8%'}):null;document.querySelectorAll('.reveal').forEach((el,i)=>{el.style.transitionDelay=`${(i%4)*70}ms`;if(io)io.observe(el);else el.classList.add('in')});document.querySelectorAll('form[data-sheet-endpoint]').forEach(form=>{const status=form.querySelector('.form-status'),btn=form.querySelector('button[type=submit]'),endpoint=form.dataset.sheetEndpoint;form.addEventListener('submit',async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(form).entries());const phone=String(data.phone||'').replace(/[^\d+]/g,'');if(phone.length<9){status.textContent='Vui lòng kiểm tra lại số điện thoại.';status.className='form-status show bad';return}btn.disabled=true;btn.textContent='Đang gửi…';try{await fetch(endpoint,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({created_at:new Date().toISOString(),name:String(data.name||'').trim(),phone,model:String(data.model||'').trim(),city:String(data.city||'').trim(),note:String(data.note||'').trim(),source:location.pathname})});status.textContent='Đã nhận thông tin. NexEV sẽ gọi lại trong hôm nay.';status.className='form-status show ok';form.reset()}catch(err){status.textContent='Chưa gửi được. Gọi 0818 574 833 để được hỗ trợ ngay.';status.className='form-status show bad'}finally{btn.disabled=false;btn.textContent='Gửi thông tin đơn ↗'}})})})();
+(()=>{
+  /* ============ ANTISPAM + SECURITY LAYER ============ */
+  const SPAM_KEYWORDS = ['http://','https://','www.','<a href','[url','viagra','casino','loan','crypto','seo service','backlink','xxx','porn'];
+  const MAX_LEN = {name:80, phone:20, model:80, city:60, note:500};
+  const RATE_LIMIT = {max:3, windowMs:5*60*1000, storageKey:'nexev_form_rate'};
+  const BLOCK_KEY = 'nexev_form_blocked';
+  const MIN_FILL_MS = 3000; // phai o tren form it nhat 3 giay
+
+  const stripTags = (v) => String(v||'').replace(/<[^>]*>/g,'').trim();
+  const clamp = (v, max) => stripTags(v).slice(0, max);
+  const isSpam = (v) => SPAM_KEYWORDS.some(k => v.toLowerCase().includes(k));
+
+  function getRate(){
+    try{
+      const raw = JSON.parse(localStorage.getItem(RATE_LIMIT) || '{"times":[]}');
+      const now = Date.now();
+      const times = (raw.times||[]).filter(t => now - t < RATE_LIMIT.windowMs);
+      return {times, count: times.length};
+    }catch(e){ return {times:[], count:0}; }
+  }
+  function pushRate(){
+    try{
+      const {times} = getRate();
+      times.push(Date.now());
+      localStorage.setItem(RATE_LIMIT, JSON.stringify({times}));
+    }catch(e){}
+  }
+  function isBlocked(){
+    try{
+      const until = Number(localStorage.getItem(BLOCK_KEY) || 0);
+      return Date.now() < until ? until : 0;
+    }catch(e){ return 0; }
+  }
+  function blockFor(ms, reason){
+    try{ localStorage.setItem(BLOCK_KEY, String(Date.now() + ms)); }catch(e){}
+  }
+
+  // honeypot: them field an vao moi form
+  document.querySelectorAll('form[data-sheet-endpoint]').forEach(form => {
+    if (form.querySelector('input[name="website_hp"]')) return;
+    const hp = document.createElement('input');
+    hp.type = 'text';
+    hp.name = 'website_hp';
+    hp.tabIndex = -1;
+    hp.autocomplete = 'off';
+    hp.setAttribute('aria-hidden','true');
+    hp.style.cssText = 'position:absolute !important;left:-9999px !important;width:1px;height:1px;opacity:0;pointer-events:none';
+    form.appendChild(hp);
+    form.dataset.openTime = String(Date.now());
+  });
+
+  // ============ FORM SUBMIT HANDLER (co bao mat) ============
+  document.querySelectorAll('form[data-sheet-endpoint]').forEach(form=>{
+    const status=form.querySelector('.form-status'),btn=form.querySelector('button[type=submit]'),endpoint=form.dataset.sheetEndpoint;
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();
+
+      // 1. Blocked?
+      const blockedUntil = isBlocked();
+      if (blockedUntil) {
+        const mins = Math.ceil((blockedUntil - Date.now())/60000);
+        status.textContent = `Bạn đã gửi quá nhiều lần. Vui lòng thử lại sau ${mins} phút hoặc gọi 0818 574 833.`;
+        status.className = 'form-status show bad';
+        return;
+      }
+
+      // 2. Honeypot check (bot thuong dien vao)
+      const hp = form.querySelector('input[name="website_hp"]');
+      if (hp && hp.value.trim() !== '') {
+        console.warn('spam detected');
+        status.textContent = 'Có lỗi xảy ra. Vui lòng gọi 0818 574 833.';
+        status.className = 'form-status show bad';
+        blockFor(30*60*1000); // block 30 phut
+        return;
+      }
+
+      // 3. Time gate (bot submit tuc thi sau khi load)
+      const openTime = Number(form.dataset.openTime || 0);
+      if (openTime && Date.now() - openTime < MIN_FILL_MS) {
+        status.textContent = 'Bạn thao tác quá nhanh. Vui lòng điền đầy đủ rồi gửi lại.';
+        status.className = 'form-status show bad';
+        return;
+      }
+
+      // 4. Rate limit
+      const rate = getRate();
+      if (rate.count >= RATE_LIMIT.max) {
+        blockFor(15*60*1000);
+        status.textContent = 'Bạn đã gửi nhiều đơn trong thời gian ngắn. Vui lòng đợi vài phút hoặc gọi 0818 574 833.';
+        status.className = 'form-status show bad';
+        return;
+      }
+
+      const data = Object.fromEntries(new FormData(form).entries());
+
+      // 5. Sanitize + validate
+      const name = clamp(data.name, MAX_LEN.name);
+      const rawPhone = String(data.phone||'');
+      const phone = rawPhone.replace(/[^\d+]/g,'').slice(0, MAX_LEN.phone);
+      const model = clamp(data.model, MAX_LEN.model);
+      const city = clamp(data.city, MAX_LEN.city);
+      const note = clamp(data.note, MAX_LEN.note);
+
+      if (name.length < 2) {
+        status.textContent = 'Vui lòng nhập họ tên đầy đủ.'; status.className='form-status show bad'; return;
+      }
+      if (phone.replace(/\D/g,'').length < 9 || phone.replace(/\D/g,'').length > 12) {
+        status.textContent = 'Số điện thoại không hợp lệ (9–12 số).'; status.className='form-status show bad'; return;
+      }
+      if (city.length < 2) {
+        status.textContent = 'Vui lòng nhập tỉnh / thành phố.'; status.className='form-status show bad'; return;
+      }
+
+      // 6. Spam keywords check
+      const allText = [name, model, city, note].join(' ');
+      if (isSpam(allText)) {
+        blockFor(60*60*1000); // block 1 gio
+        status.textContent = 'Nội dung chứa từ không hợp lệ. Vui lòng gọi 0818 574 833.';
+        status.className = 'form-status show bad';
+        return;
+      }
+
+      // 7. Duplicate check (localStorage)
+      const dupKey = 'nexev_last_' + phone;
+      const lastSent = Number(localStorage.getItem(dupKey) || 0);
+      if (lastSent && Date.now() - lastSent < 10*60*1000) {
+        status.textContent = 'Bạn đã gửi đơn với số này cách đây không lâu. Chúng tôi sẽ gọi lại sớm — không cần gửi lại.';
+        status.className = 'form-status show bad';
+        return;
+      }
+
+      // 8. Confirm truoc khi gui (chong click nham + bot khong confirm duoc)
+      const confirmMsg = `Xác nhận gửi thông tin?\n\nHọ tên: ${name}\nSĐT: ${phone}\nMẫu xe: ${model}\nTỉnh/TP: ${city}`;
+      if (!confirm(confirmMsg)) return;
+
+      // === GUI ===
+      btn.disabled=true;btn.textContent='Đang gửi…';
+      try{
+        await fetch(endpoint,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({
+          created_at:new Date().toISOString(),
+          name, phone, model, city, note,
+          source:location.pathname,
+          ua: navigator.userAgent.slice(0,100),
+          submittedAt: Date.now()
+        })});
+        pushRate();
+        try{ localStorage.setItem(dupKey, String(Date.now())); }catch(e){}
+        status.textContent='Đã nhận thông tin. NexEV sẽ gọi lại trong hôm nay.';
+        status.className='form-status show ok';
+        form.reset();
+        form.dataset.openTime = String(Date.now()); // reset time gate cho lan sau
+      }catch(err){
+        status.textContent='Chưa gửi được. Gọi 0818 574 833 để được hỗ trợ ngay.';
+        status.className='form-status show bad';
+      }finally{btn.disabled=false;btn.textContent='Gửi thông tin đơn ↗'}
+    });
+  });
+})();
 
 /* image interaction: labeled slide transition, auto-rotate every 3s, pause on hover/focus/touch */
 (()=>{
