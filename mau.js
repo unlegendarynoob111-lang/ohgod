@@ -4,12 +4,12 @@
 (()=>{
   document.querySelectorAll('[data-carousel]').forEach(root=>{
     const slides=[...root.querySelectorAll('.carousel-slide')],dots=root.querySelector('.carousel-dots'),meta=root.querySelector('.carousel-meta');
-    if(!slides.length)return; let active=0,hover=false,pinned=false;
+    if(!slides.length)return; let active=0,hover=false,holdTimer;
     const render=()=>{const current=slides[active],label=current.dataset.label||current.alt||'';if(meta){meta.innerHTML=`<b>${String(active+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}</b><span>${label}</span>`}dots?.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('is-active',i===active))};
     const setActive=index=>{const previous=active;active=(index+slides.length)%slides.length;if(previous!==active){slides[previous].classList.remove('is-active');slides[previous].classList.add('is-leaving');slides[active].classList.remove('is-leaving');requestAnimationFrame(()=>slides[active].classList.add('is-active'));setTimeout(()=>slides[previous].classList.remove('is-leaving'),720)}render()};
-    slides.forEach((slide,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Xem ảnh ${i+1}: ${slide.dataset.label||slide.alt||''}`);b.addEventListener('click',e=>{e.stopPropagation();setActive(i);pinned=true});dots?.appendChild(b)});render();
-    setInterval(()=>{if(!hover&&!pinned)setActive(active+1)},3000);
-    root.addEventListener('pointerenter',()=>hover=true);root.addEventListener('pointerleave',()=>hover=false);root.addEventListener('focusin',()=>hover=true);root.addEventListener('focusout',()=>hover=false);root.addEventListener('click',()=>pinned=true);root.addEventListener('touchstart',()=>pinned=true,{passive:true});
+    slides.forEach((slide,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Xem ảnh ${i+1}: ${slide.dataset.label||slide.alt||''}`);b.addEventListener('click',e=>{e.stopPropagation();setActive(i)});dots?.appendChild(b)});render();
+    setInterval(()=>{if(!hover)setActive(active+1)},3000);
+    root.addEventListener('pointerenter',()=>hover=true);root.addEventListener('pointerleave',()=>hover=false);root.addEventListener('focusin',()=>hover=true);root.addEventListener('focusout',()=>hover=false);const holdBriefly=()=>{hover=true;clearTimeout(holdTimer);holdTimer=setTimeout(()=>{hover=false},3000)};root.addEventListener('click',holdBriefly);root.addEventListener('touchstart',holdBriefly,{passive:true});
   });
   document.querySelectorAll('[data-marquee]').forEach(root=>{
     let pinned=false;root.addEventListener('pointerenter',()=>root.classList.add('is-paused'));root.addEventListener('pointerleave',()=>{if(!pinned)root.classList.remove('is-paused')});root.addEventListener('focusin',()=>root.classList.add('is-paused'));root.addEventListener('focusout',()=>{if(!pinned)root.classList.remove('is-paused')});root.addEventListener('click',()=>{pinned=!pinned;root.classList.toggle('is-paused',pinned)});root.addEventListener('touchstart',()=>{pinned=true;root.classList.add('is-paused')},{passive:true});
@@ -17,4 +17,5 @@
 })();
 /* JS-driven rail so the gallery keeps moving even when CSS motion is reduced */
 (()=>{document.querySelectorAll('[data-marquee]').forEach(root=>{const track=root.querySelector('.marquee-track');if(!track)return;let offset=0,last=performance.now();const tick=now=>{const half=track.scrollWidth/2;const stopped=root.classList.contains('is-paused')||root.matches(':hover');if(half>0&&!stopped){offset-=((now-last)*0.055);if(offset<=-half)offset+=half;track.style.transform=`translate3d(${offset}px,0,0)`}last=now;requestAnimationFrame(tick)};requestAnimationFrame(tick)})})();
+
 
