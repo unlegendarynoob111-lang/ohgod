@@ -122,10 +122,14 @@ body{font-size:16px;line-height:1.55}
 .carousel-meta{position:absolute;z-index:4;left:16px;bottom:16px;display:flex;align-items:baseline;gap:9px;padding:9px 12px;border-radius:12px;background:rgba(17,38,63,.84);color:#fff;box-shadow:0 8px 20px rgba(0,0,0,.14);pointer-events:none}
 .carousel-meta b{color:var(--lime);font-size:11px;letter-spacing:.08em}.carousel-meta span{font-size:12px;font-weight:700}
 .carousel-dots{left:auto;right:16px;bottom:20px}
-@media(max-width:620px){.carousel-meta{left:12px;bottom:12px;padding:8px 10px}.carousel-meta span{font-size:11px}.carousel-dots{right:12px;bottom:16px}}
+@media(max-width:620px){.simple-carousel{border-radius:22px}.simple-carousel .carousel-stage{clip-path:inset(0 round 22px);-webkit-clip-path:inset(0 round 22px)}.carousel-meta{left:12px;bottom:12px;padding:8px 10px}.carousel-meta span{font-size:11px}.carousel-dots{right:12px;bottom:16px}}
 
-.simple-carousel{position:relative}
+.simple-carousel{position:relative;border-radius:28px;overflow:hidden;isolation:isolate}.simple-carousel .carousel-stage{border-radius:inherit;overflow:hidden;clip-path:inset(0 round 28px);-webkit-clip-path:inset(0 round 28px);isolation:isolate}.simple-carousel .carousel-slide{border-radius:inherit}
 
 
 
+
+
+
+@media(max-width:620px){.simple-carousel{border-radius:22px}.simple-carousel .carousel-stage{border-radius:inherit;clip-path:inset(0 round 22px);-webkit-clip-path:inset(0 round 22px)}}
 
