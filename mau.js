@@ -27,3 +27,6 @@
     root.addEventListener('touchstart',()=>{pinned=true;root.classList.add('is-paused');pause?.classList.add('is-pinned')},{passive:true});
   });
 })();
+
+/* JS-driven rail so the gallery keeps moving even when CSS motion is reduced */
+(()=>{document.querySelectorAll('[data-marquee]').forEach(root=>{const track=root.querySelector('.marquee-track');if(!track)return;let offset=0,last=performance.now();const tick=now=>{const half=track.scrollWidth/2;const stopped=root.classList.contains('is-paused')||root.matches(':hover');if(half>0&&!stopped){offset-=((now-last)*0.055);if(offset<=-half)offset+=half;track.style.transform=`translate3d(${offset}px,0,0)`}last=now;requestAnimationFrame(tick)};requestAnimationFrame(tick)})})();
