@@ -110,3 +110,7 @@ body{font-size:16px;line-height:1.55}
 .simple-prices>div{border-radius:16px}.simple-order form{border-radius:24px}.simple-order input,.simple-order select,.simple-order textarea{border-radius:12px}
 .simple-page .button{box-shadow:0 8px 18px rgba(0,0,0,.08)}
 @media(max-width:620px){.simple-stats{width:calc(100% - 28px);border-radius:20px}.simple-stats-grid div:first-child{padding-left:18px}.simple-stats-grid div:last-child{padding-right:18px}.simple-page .simple-hero .hero-media img{border-radius:22px}.simple-mode{padding:20px;border-radius:16px}.simple-proof-grid img{border-radius:22px}.simple-order form{border-radius:18px}}
+
+.simple-proof .proof-carousel .carousel-stage{height:470px;min-height:0}
+@media(max-width:620px){.simple-proof .proof-carousel .carousel-stage{height:300px}}
+
