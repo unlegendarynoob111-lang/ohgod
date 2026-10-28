@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Trụ sạc cá nhân AC 7kW NexEV">
   <title>NexEV / Trụ sạc cá nhân AC 7kW</title>
-  <link rel="stylesheet" href="mau.css?v=20261028-sfpro">
+  <link rel="stylesheet" href="mau.css?v=20261028-checker">
 </head>
 <body class="v3 simple-page">
   <header class="site-header">
@@ -96,6 +96,44 @@
             <div class="compat-card is-blue"><b>7kW</b><span>Cổng Type 2 — đấu aptomat phụ + dây 2×6mm²</span><small>Sạc nhanh gấp đôi, để qua đêm là đầy pin</small></div>
           </div>
           <p class="compat-note">* Nếu xe dùng cổng khác, gọi 0818 574 833 — NexEV kiểm tra và tư vấn adapter phù hợp trước khi mua.</p>
+
+          <!-- Xe cua ban: chon mau, hien ket qua ngay -->
+          <div class="car-checker" id="car-checker">
+            <div class="cc-head">🔍 Kiểm tra xe của bạn</div>
+            <div class="cc-row">
+              <select id="ccBrand" aria-label="Chọn hãng xe">
+                <option value="">— Chọn hãng —</option>
+              </select>
+              <select id="ccModel" aria-label="Chọn mẫu xe" disabled>
+                <option value="">— Chọn mẫu —</option>
+              </select>
+            </div>
+            <div class="cc-result" id="ccResult" role="status" aria-live="polite"></div>
+          </div>
+        </div>
+        <div class="compat-marquee reveal" data-marquee aria-label="Hình ảnh xe điện sạc với NexEV theo từng hãng">
+          <div class="marquee-track">
+            <div class="marquee-set">
+              <figure data-brand="VinFast"><img src="assets/car-charging.jpg" alt="VinFast sạc bằng NexEV" loading="lazy"><figcaption>VinFast · Sạc tại nhà</figcaption></figure>
+              <figure data-brand="VinFast"><img src="assets/car-red-charging.jpg" alt="VinFast test NexEV" loading="lazy"><figcaption>VinFast · Test thực tế</figcaption></figure>
+              <figure data-brand="BYD"><img src="assets/home-charging.jpg" alt="BYD sạc tại nhà" loading="lazy"><figcaption>BYD · Sạc tại nhà</figcaption></figure>
+              <figure data-brand="BYD"><img src="assets/car-delivery.jpg" alt="BYD giao NexEV" loading="lazy"><figcaption>BYD · Giao hàng</figcaption></figure>
+              <figure data-brand="Wuling"><img src="assets/portable-setup.jpg" alt="Wuling sạc di động" loading="lazy"><figcaption>Wuling · Sạc di động</figcaption></figure>
+              <figure data-brand="Omoda/MG"><img src="assets/charger-display.jpg" alt="Omoda MG màn sạc" loading="lazy"><figcaption>Omoda · MG · Màn sạc</figcaption></figure>
+              <figure data-brand="Hyundai/Kia"><img src="assets/wall-install.jpg" alt="Hyundai Kia lắp cố định" loading="lazy"><figcaption>Hyundai · Kia · Lắp cố định</figcaption></figure>
+              <figure data-brand="Khác"><img src="assets/connector-install.jpg" alt="Đầu cắm NexEV" loading="lazy"><figcaption>NexEV · Đầu cắm Type 2</figcaption></figure>
+            </div>
+            <div class="marquee-set" aria-hidden="true">
+              <figure><img src="assets/car-charging.jpg" alt="" loading="lazy"><figcaption>VinFast · Sạc tại nhà</figcaption></figure>
+              <figure><img src="assets/car-red-charging.jpg" alt="" loading="lazy"><figcaption>VinFast · Test thực tế</figcaption></figure>
+              <figure><img src="assets/home-charging.jpg" alt="" loading="lazy"><figcaption>BYD · Sạc tại nhà</figcaption></figure>
+              <figure><img src="assets/car-delivery.jpg" alt="" loading="lazy"><figcaption>BYD · Giao hàng</figcaption></figure>
+              <figure><img src="assets/portable-setup.jpg" alt="" loading="lazy"><figcaption>Wuling · Sạc di động</figcaption></figure>
+              <figure><img src="assets/charger-display.jpg" alt="" loading="lazy"><figcaption>Omoda · MG · Màn sạc</figcaption></figure>
+              <figure><img src="assets/wall-install.jpg" alt="" loading="lazy"><figcaption>Hyundai · Kia · Lắp cố định</figcaption></figure>
+              <figure><img src="assets/connector-install.jpg" alt="" loading="lazy"><figcaption>NexEV · Đầu cắm Type 2</figcaption></figure>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -169,6 +207,112 @@
   </main>
   <footer class="footer"><div class="shell footer-inner"><img src="assets/logo-nexev.png" alt="NexEV"><span>Sạc tại nhà · chủ động mỗi ngày</span><a href="mau.html">← Chọn mẫu khác</a></div></footer>
   <script src="mau.js?v=20261028-lang"></script>
+<script>
+(function(){
+  "use strict";
+  /* ===== Xe cua ban: chon hang → chon mau → hien ket qua ===== */
+  var DB = {
+    "VinFast": {
+      models: ["VF 3","VF 5","VF 6","VF 7","VF 8","VF 9","Minio Green"],
+      cong: "Type 2 (7kW) + GB/T 3.3kW tùy năm sản xuất",
+      tocDo: "7kW với cổng Type 2 · 3.3kW với GB/T",
+      thoiGian: "VF 6: 5–7 giờ (7kW) hoặc 10–14 giờ (3.3kW)",
+      img: "assets/car-charging.jpg",
+      alt: "VinFast sạc bằng NexEV"
+    },
+    "BYD": {
+      models: ["Dolphin","Atto 3","Seal","Han"],
+      cong: "Type 2 (7kW)",
+      tocDo: "7kW tối đa",
+      thoiGian: "Dolphin ~6 giờ đầy · Atto 3 ~7 giờ đầy",
+      img: "assets/home-charging.jpg",
+      alt: "BYD sạc tại nhà với NexEV"
+    },
+    "Wuling": {
+      models: ["Mini EV","Mini EV Cabrio"],
+      cong: "GB/T (3.3kW)",
+      tocDo: "3.3kW tối đa (pin nhỏ nên vẫn sạc khá nhanh)",
+      thoiGian: "Mini EV: ~4–6 giờ đầy",
+      img: "assets/portable-setup.jpg",
+      alt: "Wuling Mini EV sạc di động với NexEV"
+    },
+    "Omoda / MG": {
+      models: ["Omoda E5","MG4","MG ZS EV","MG5 EV"],
+      cong: "Type 2 (7kW)",
+      tocDo: "7kW tối đa",
+      thoiGian: "MG4 ~7 giờ đầy · ZS EV ~8 giờ đầy",
+      img: "assets/charger-display.jpg",
+      alt: "Omoda MG sạc bằng NexEV"
+    },
+    "Hyundai / Kia": {
+      models: ["Ioniq 5","Ioniq 6","Kona Electric","EV6","Niro EV"],
+      cong: "Type 2 (7kW)",
+      tocDo: "7kW tối đa (AC onboard 7–11kW)",
+      thoiGian: "Kona ~7 giờ · Ioniq 5 ~8 giờ đầy",
+      img: "assets/wall-install.jpg",
+      alt: "Hyundai Kia sạc bằng NexEV"
+    },
+    "Hãng khác": {
+      models: ["Nissan Leaf","Mazda MX-30","Mercedes EQB/EQA","Peugeot e-2008","Toyota bZ4X","Khác (gọi tư vấn)"],
+      cong: "Type 2 (7kW) — kiểm tra thêm nếu cổng khác",
+      tocDo: "7kW tối đa với Type 2",
+      thoiGian: "Tùy pin xe, trung bình 6–9 giờ",
+      img: "assets/connector-install.jpg",
+      alt: "Sạc NexEV cho các dòng xe khác"
+    }
+  };
+  var brandSel = document.getElementById("ccBrand");
+  var modelSel = document.getElementById("ccModel");
+  var result   = document.getElementById("ccResult");
+  if(!brandSel || !modelSel || !result) return;
+
+  Object.keys(DB).forEach(function(b){
+    var o = document.createElement("option");
+    o.value = b; o.textContent = b;
+    brandSel.appendChild(o);
+  });
+
+  brandSel.addEventListener("change", function(){
+    var b = brandSel.value;
+    modelSel.innerHTML = '<option value="">— Chọn mẫu —</option>';
+    modelSel.disabled = !b;
+    result.className = "cc-result";
+    result.innerHTML = "";
+    if(!b) return;
+    DB[b].models.forEach(function(m){
+      var o = document.createElement("option");
+      o.value = m; o.textContent = m;
+      modelSel.appendChild(o);
+    });
+  });
+
+  modelSel.addEventListener("change", function(){
+    var b = brandSel.value, m = modelSel.value;
+    if(!b || !m){ result.className = "cc-result"; result.innerHTML=""; return; }
+    var d = DB[b];
+    var imgHtml = d.img
+      ? '<div class="cc-thumb"><img src="'+d.img+'" alt="'+(d.alt||'')+'" loading="lazy"></div>'
+      : "";
+    result.className = "cc-result show ok";
+    result.innerHTML =
+      imgHtml +
+      '<div class="cc-body">'+
+        '<div class="cc-title">✓ ' + b + " " + m + " — sạc được với NexEV</div>"+
+        '<div class="cc-row-line"><span>Cổng</span><b>' + d.cong + "</b></div>"+
+        '<div class="cc-row-line"><span>Công suất</span><b>' + d.tocDo + "</b></div>"+
+        '<div class="cc-row-line"><span>Thời gian</span><b>' + d.thoiGian + "</b></div>"+
+        '<a class="cc-cta" href="#order">Chốt đơn — để lại thông tin</a>'+
+      "</div>";
+  });
+
+  /* ===== Hover/touch pause cho marquee trong compat ===== */
+  document.querySelectorAll(".compat-marquee[data-marquee]").forEach(function(root){
+    root.addEventListener("mouseenter", function(){ root.classList.add("is-paused"); });
+    root.addEventListener("mouseleave", function(){ root.classList.remove("is-paused"); });
+    root.addEventListener("touchstart", function(){ root.classList.add("is-paused"); }, {passive:true});
+  });
+})();
+</script>
 </body>
 </html>
 
