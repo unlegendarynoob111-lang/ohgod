@@ -76,7 +76,7 @@ body{font-size:16px;line-height:1.55}
 .carousel-dots button{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.55);cursor:pointer}
 .carousel-dots button.is-active{width:24px;border-radius:999px;background:var(--lime)}
 .simple-marquee{position:relative;overflow:hidden;background:#0b1b2e;border-bottom:1px solid #28415a;cursor:pointer}
-.marquee-track{display:flex;width:max-content;animation:marqueeMove 34s linear infinite;will-change:transform}
+.marquee-track{display:flex;width:max-content;animation:marqueeMove 20s linear infinite;will-change:transform}
 .marquee-set{display:flex;gap:10px;padding:10px 5px}
 .marquee-set img{width:230px;height:120px;object-fit:cover;flex:0 0 auto;filter:saturate(.92);transition:filter .2s ease,transform .25s ease}
 .simple-marquee:hover .marquee-track,.simple-marquee.is-paused .marquee-track{animation-play-state:paused}
@@ -85,3 +85,7 @@ body{font-size:16px;line-height:1.55}
 @keyframes marqueeMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media(max-width:620px){.carousel-stage{min-height:300px}.carousel-pause{right:12px;top:12px}.carousel-dots{left:12px;bottom:12px}.marquee-set{gap:8px;padding:8px 4px}.marquee-set img{width:172px;height:96px}.marquee-pause{right:12px}}
 @media(prefers-reduced-motion:reduce){.marquee-track{animation:none}.simple-carousel .carousel-slide{transition:none}}
+
+/* controls intentionally hidden; hover/touch still pauses */
+.carousel-pause,.marquee-pause{display:none!important}
+
