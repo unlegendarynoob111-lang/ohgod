@@ -277,3 +277,12 @@ body.lightbox-open{overflow:hidden}
   border-radius:0;
   overflow:hidden;
 }
+
+
+/* === bo caption marquee — anh trong hon === */
+.compat-marquee .marquee-set img{height:210px;filter:saturate(1)}
+.compat-marquee .marquee-set figure{width:320px}
+@media(max-width:620px){
+  .compat-marquee .marquee-set img{height:140px}
+  .compat-marquee .marquee-set figure{width:230px}
+}
