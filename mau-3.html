@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Trụ sạc cá nhân AC 7kW NexEV">
   <title>NexEV / Trụ sạc cá nhân AC 7kW</title>
-  <link rel="stylesheet" href="mau.css?v=20261028-checker">
+  <link rel="stylesheet" href="mau.css?v=20261028-fb">
 </head>
 <body class="v3 simple-page">
   <header class="site-header">
@@ -111,7 +111,7 @@
             <div class="cc-result" id="ccResult" role="status" aria-live="polite"></div>
           </div>
         </div>
-        <div class="compat-marquee reveal" data-marquee aria-label="Hình ảnh xe điện sạc với NexEV theo từng hãng">
+        <div class="compat-marquee full-bleed reveal" data-marquee aria-label="Hình ảnh xe điện sạc với NexEV theo từng hãng">
           <div class="marquee-track">
             <div class="marquee-set">
               <figure data-brand="VinFast"><img src="assets/car-charging.jpg" alt="VinFast sạc bằng NexEV" loading="lazy"><figcaption>VinFast · Sạc tại nhà</figcaption></figure>
@@ -290,12 +290,8 @@
     var b = brandSel.value, m = modelSel.value;
     if(!b || !m){ result.className = "cc-result"; result.innerHTML=""; return; }
     var d = DB[b];
-    var imgHtml = d.img
-      ? '<div class="cc-thumb"><img src="'+d.img+'" alt="'+(d.alt||'')+'" loading="lazy"></div>'
-      : "";
     result.className = "cc-result show ok";
     result.innerHTML =
-      imgHtml +
       '<div class="cc-body">'+
         '<div class="cc-title">✓ ' + b + " " + m + " — sạc được với NexEV</div>"+
         '<div class="cc-row-line"><span>Cổng</span><b>' + d.cong + "</b></div>"+
