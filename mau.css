@@ -89,3 +89,7 @@ body{font-size:16px;line-height:1.55}
 /* controls intentionally hidden; hover/touch still pauses */
 .carousel-pause,.marquee-pause{display:none!important}
 
+
+/* continuous rail is intentional */
+@media(prefers-reduced-motion:reduce){.simple-marquee .marquee-track{animation:marqueeMove 20s linear infinite!important}}
+
