@@ -136,20 +136,29 @@
       // === GUI ===
       btn.disabled=true;btn.textContent='Đang gửi…';
       try{
-        const rp = await fetch(endpoint,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({
-          created_at:new Date().toISOString(),
-          name, phone, model, city, note,
-          source:location.pathname,
-          ua: navigator.userAgent.slice(0,100),
-          submittedAt: Date.now()
-        })});
-        let srvOk = rp.ok, srvMsg = '';
+        const sendTo = async (url)=>{
+          const rp = await fetch(url,{method:'POST',mode:'cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({
+            created_at:new Date().toISOString(),
+            name, phone, model, city, note,
+            source:location.pathname,
+            ua: navigator.userAgent.slice(0,100),
+            submittedAt: Date.now()
+          })});
+          let ok = rp.ok, msg = '';
+          try{
+            const j = await rp.json();
+            if (j && typeof j.ok === 'boolean'){ ok = j.ok; if(!j.ok) msg = String(j.error || 'Không hợp lệ.'); }
+          }catch(_){}
+          return {ok, msg};
+        };
+        let res;
         try{
-          const j = await rp.json();
-          if (j && typeof j.ok === 'boolean') { srvOk = j.ok; if(!j.ok) srvMsg = String(j.error || 'Không hợp lệ.'); }
-        }catch(_){}
-        if (!srvOk) {
-          status.textContent = (srvMsg ? srvMsg + ' ' : 'Chưa gửi được. ') + 'Gọi 0818 574 833 để được hỗ trợ ngay.';
+          res = await sendTo('https://order.ovoice.app/order');
+        }catch(intakeErr){
+          res = await sendTo(endpoint); // intake chet → gui thang Apps Script
+        }
+        if (!res.ok) {
+          status.textContent = (res.msg ? res.msg + ' ' : 'Chưa gửi được. ') + 'Gọi 0818 574 833 để được hỗ trợ ngay.';
           status.className = 'form-status show bad';
           return;
         }
