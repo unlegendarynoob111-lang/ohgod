@@ -343,3 +343,90 @@ body.lightbox-open{overflow:hidden}
   .simple-page .simple-hero .hero-note{font-size:13px}
 }
 @media(max-width:900px){.simple-why{padding:70px 0}}
+
+
+/* ===== MOBILE HARD FIX — cho man hinh 320-420px ===== */
+@media(max-width:480px){
+  /* Hero: giam kich thuoc chu cho vua man hinh nho */
+  .simple-page .simple-hero{padding:40px 0 50px}
+  .simple-page .simple-hero h1{font-size:44px !important;line-height:.98;letter-spacing:-.04em}
+  .simple-page h2{font-size:38px !important;letter-spacing:-.04em}
+  .simple-page .simple-hero .lead{font-size:14.5px;line-height:1.55}
+  .simple-page .simple-hero .hero-points li{font-size:13.5px;padding-left:18px}
+  .simple-page .simple-hero .hero-sum{font-size:14px;padding:11px 13px}
+  .simple-page .simple-hero .hero-note{font-size:12.5px}
+
+  /* shell: padding nho hon */
+  .shell{width:calc(100% - 28px)}
+
+  /* stats 2x2 thay vi 1 cot */
+  .simple-stats-grid{grid-template-columns:1fr 1fr !important}
+  .simple-stats-grid div{padding:12px 14px !important;border-right:0 !important;border-bottom:1px solid rgba(17,38,63,.15) !important}
+  .simple-stats-grid div:nth-child(2n){border-right:0}
+  .simple-stats-grid div:nth-child(2n+1){border-right:1px solid rgba(17,38,63,.15) !important}
+  .simple-stats-grid div:nth-last-child(-n+2){border-bottom:0 !important}
+  .simple-stats-grid b{font-size:20px}
+  .simple-stats-grid span{font-size:12px}
+
+  /* compat-cards */
+  .compat-card{padding:14px 16px}
+  .compat-card b{font-size:26px}
+  .compat-card span{font-size:14px}
+
+  /* modes */
+  .simple-mode{padding:16px}
+  .simple-mode h3{font-size:18px}
+  .simple-mode p{font-size:14px}
+
+  /* proof + why list */
+  .simple-list li,.why-list li{font-size:14px;line-height:1.5}
+  .why-list li strong{word-break:break-word}
+
+  /* order + form */
+  .simple-order{padding:52px 0}
+  .simple-prices>div{padding:14px}
+  .simple-prices strong{font-size:20px}
+  .simple-hotline{font-size:22px}
+  .simple-order form{padding:16px}
+  .simple-order input,.simple-order select,.simple-order textarea{font-size:16px !important} /* chong iOS zoom */
+
+  /* car-checker */
+  .cc-row{grid-template-columns:1fr}
+  .cc-row select{font-size:16px !important}
+  .cc-result .cc-title{font-size:14px}
+  .cc-result .cc-row-line{font-size:13px;flex-direction:column;gap:2px}
+  .cc-result .cc-row-line b{text-align:left;flex:none}
+  .cc-result .cc-cta{width:100%}
+
+  /* marquee: nho + chay toc do vua phai */
+  .compat-marquee.full-bleed .marquee-set img{width:200px;height:140px}
+  .compat-marquee.full-bleed .marquee-set figure{width:200px}
+  .compat-marquee.full-bleed .marquee-track{animation-duration:18s}
+  .simple-marquee .marquee-set img{width:160px;height:100px}
+
+  /* carousel hero */
+  .carousel-stage{min-height:260px}
+  .simple-page .hero-media img{height:280px}
+  .simple-page .proof-carousel .carousel-stage{height:280px}
+
+  /* eyebrow */
+  .eyebrow{font-size:9px;letter-spacing:.12em}
+
+  /* button */
+  .button{min-height:44px;font-size:11px;padding:0 15px}
+
+  /* khoang giua cac section */
+  .simple-modes,.simple-proof,.simple-order,.simple-compat,.simple-why{padding:48px 0}
+
+  /* h1 em (chu mau) khong xuong dong loi */
+  .simple-page .simple-hero h1 em{display:inline-block;word-break:break-word}
+
+  /* footer */
+  .footer-inner{flex-direction:column;gap:8px;text-align:center}
+}
+
+/* tablet 481-620px: chinh nhe */
+@media(max-width:620px) and (min-width:481px){
+  .simple-page .simple-hero h1{font-size:52px !important}
+  .simple-page h2{font-size:44px !important}
+}
