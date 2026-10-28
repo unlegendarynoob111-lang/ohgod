@@ -6,13 +6,19 @@ const RATE_LIMIT_MAX = 3;
 const RATE_WINDOW_MS = 10 * 60 * 1000;
 const SPAM_KEYWORDS = ['viagra', 'casino', 'loan', 'crypto', 'seo service', 'backlink', 'xxx', 'porn', 'http://spam', 'bitcoin'];
 
-/* ==== NOTIFICATION CONFIG ==== */
-// Zalo Official Account API (nen dung)
+/* ==== NOTIFICATION CONFIG (Script Properties) ==== */
+// 1) Zalo Bot Platform (chinh thuc, ho tro NHOM) — uu tien cao nhat
+//    ZALO_BOT_TOKEN      : token con bot (dang 123456:abcdef...) tu bot.zaloplatforms.com
+//    ZALO_GROUP_CHAT_ID  : id cua nhom Zalo (bot tu dong nhay vao nhom)
+const ZALO_BOT_TOKEN     = PropertiesService.getScriptProperties().getProperty('ZALO_BOT_TOKEN')     || '';
+const ZALO_GROUP_CHAT_ID = PropertiesService.getScriptProperties().getProperty('ZALO_GROUP_CHAT_ID') || '';
+
+// 2) Zalo Official Account (OA) — neu sau nay dang ky OA
 const ZALO_OA_TOKEN   = PropertiesService.getScriptProperties().getProperty('ZALO_OA_TOKEN')   || '';
 const ZALO_OA_USER_ID = PropertiesService.getScriptProperties().getProperty('ZALO_OA_USER_ID') || '';
 const ZALO_PHONE      = PropertiesService.getScriptProperties().getProperty('ZALO_PHONE')      || '';
 
-// Telegram fallback (de nhat — chi can bot token + chat id)
+// 3) Telegram fallback
 const TG_BOT_TOKEN = PropertiesService.getScriptProperties().getProperty('TG_BOT_TOKEN') || '';
 const TG_CHAT_ID   = PropertiesService.getScriptProperties().getProperty('TG_CHAT_ID')   || '';
 
@@ -89,27 +95,53 @@ function doPost(e) {
 }
 
 function doGet() {
-  return json_({ ok: true, service: 'Nex EV order intake (secured + notify)' });
+  return json_({ ok: true, service: 'Nex EV order intake (secured + notify v3)' });
 }
 
-/* ==== NOTIFICATION: Zalo OA + Telegram fallback ==== */
+/* ==== NOTIFY: Zalo Bot NHOM -> Zalo OA -> Telegram ==== */
 function notifyNewOrder_(o) {
   const msg =
-    '🔔 ĐƠN HÀNG MỚI - NexEV\n' +
+    '🔔 ĐƠN HÀNG MỚI — NexEV\n' +
     '─────────────────\n' +
     '👤 Tên: ' + o.name + '\n' +
     '📱 SĐT: ' + o.phone + '\n' +
     '🚗 Xe: ' + (o.model || '-') + '\n' +
     '📍 Tỉnh/TP: ' + (o.city || '-') + '\n' +
     '📝 Ghi chú: ' + (o.note || '-') + '\n' +
-    '🕐 ' + new Date(o.createdAt).toLocaleString('vi-VN');
+    '🕐 ' + Utilities.formatDate(new Date(o.createdAt), 'Asia/Ho_Chi_Minh', 'HH:mm dd/MM/yyyy');
 
   var sent = false;
-  if (ZALO_OA_TOKEN && ZALO_OA_USER_ID) {
+
+  // 1) Zalo Bot Platform — day thang vao NHOM
+  if (ZALO_BOT_TOKEN && ZALO_GROUP_CHAT_ID) {
+    sent = sendZaloBotGroup_(msg);
+  }
+
+  // 2) Zalo OA (follower)
+  if (!sent && ZALO_OA_TOKEN && ZALO_OA_USER_ID) {
     sent = sendZalo_(msg);
   }
+
+  // 3) Telegram fallback
   if (!sent && TG_BOT_TOKEN && TG_CHAT_ID) {
     sendTelegram_(msg);
+  }
+}
+
+function sendZaloBotGroup_(msg) {
+  try {
+    const res = UrlFetchApp.fetch('https://bot-api.zaloplatforms.com/bot' + ZALO_BOT_TOKEN + '/sendMessage', {
+      method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify({ chat_id: ZALO_GROUP_CHAT_ID, text: msg }),
+      muteHttpExceptions: true
+    });
+    const ok = res.getResponseCode() === 200;
+    if (!ok) console.error('ZaloBot send failed:', res.getContentText().slice(0, 300));
+    return ok;
+  } catch (e) {
+    console.error('ZaloBot send error:', e);
+    return false;
   }
 }
 

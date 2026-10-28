@@ -1,4 +1,9 @@
 worker.js
 *.py
+!zalo-bot/zalo-groupbot.py
 _xem-truoc.html
 _anh-xem-truoc.png
+zalo-bot/zalo-bot-config.local.json
+zalo-bot/zalo-bot-state.json
+zalo-bot/*.log
+zalo-bot/__pycache__/
