@@ -176,23 +176,44 @@
   });
 })();
 
-/* image interaction: labeled slide transition, auto-rotate every 3s, pause on hover/focus/touch */
+/* image interaction: load carousel images on demand and pause work offscreen */
 (()=>{
   document.querySelectorAll('[data-carousel]').forEach(root=>{
     const slides=[...root.querySelectorAll('.carousel-slide')],dots=root.querySelector('.carousel-dots'),meta=root.querySelector('.carousel-meta');
-    if(!slides.length)return; let active=0,hover=false,holdTimer;
+    if(!slides.length)return; let active=0,hover=false,holdTimer,transitioning=false,visible=!('IntersectionObserver' in window);
+    const ensureLoaded=slide=>{
+      const pendingSource=slide.dataset.src;
+      const source=pendingSource||slide.getAttribute('src');if(!source)return Promise.resolve(false);
+      if(slide.complete&&slide.naturalWidth>0)return Promise.resolve(true);
+      const wasComplete=slide.complete;slide.loading='eager';
+      return new Promise(resolve=>{let settled=false;const done=()=>{if(settled)return;settled=true;resolve(slide.naturalWidth>0)};slide.addEventListener('load',done,{once:true});slide.addEventListener('error',done,{once:true});if(pendingSource){slide.src=pendingSource;delete slide.dataset.src}else if(wasComplete)slide.src=source;if(slide.complete)done()});
+    };
     const render=()=>{const current=slides[active],label=current.dataset.label||current.alt||'';if(meta){meta.innerHTML=`<b>${String(active+1).padStart(2,'0')} / ${String(slides.length).padStart(2,'0')}</b><span>${label}</span>`}dots?.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('is-active',i===active))};
-    const setActive=index=>{const previous=active;active=(index+slides.length)%slides.length;if(previous!==active){slides[previous].classList.remove('is-active');slides[previous].classList.add('is-leaving');slides[active].classList.remove('is-leaving');requestAnimationFrame(()=>slides[active].classList.add('is-active'));setTimeout(()=>slides[previous].classList.remove('is-leaving'),900)}render()};
+    const setActive=async index=>{const nextIndex=(index+slides.length)%slides.length;if(nextIndex===active||transitioning)return;transitioning=true;const ready=await ensureLoaded(slides[nextIndex]);transitioning=false;if(!ready)return;const previous=active;active=nextIndex;slides[previous].classList.remove('is-active');slides[previous].classList.add('is-leaving');slides[active].classList.remove('is-leaving');requestAnimationFrame(()=>slides[active].classList.add('is-active'));setTimeout(()=>slides[previous].classList.remove('is-leaving'),900);render()};
     slides.forEach((slide,i)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label',`Xem ảnh ${i+1}: ${slide.dataset.label||slide.alt||''}`);b.addEventListener('click',e=>{e.stopPropagation();setActive(i)});dots?.appendChild(b)});render();
-    setInterval(()=>{if(!hover)setActive(active+1)},3000);
+    if('IntersectionObserver' in window){const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)ensureLoaded(slides[active])},{rootMargin:'250px 0px'});observer.observe(root)}else ensureLoaded(slides[active]);
+    setInterval(()=>{if(visible&&!hover&&slides[active].complete&&slides[active].naturalWidth)setActive(active+1)},5000);
     root.addEventListener('pointerenter',()=>hover=true);root.addEventListener('pointerleave',()=>hover=false);root.addEventListener('focusin',()=>hover=true);root.addEventListener('focusout',()=>hover=false);const holdBriefly=()=>{hover=true;clearTimeout(holdTimer);holdTimer=setTimeout(()=>{hover=false},3000)};root.addEventListener('click',holdBriefly);root.addEventListener('touchstart',holdBriefly,{passive:true});
   });
   document.querySelectorAll('[data-marquee]').forEach(root=>{
     let pinned=false;root.addEventListener('pointerenter',()=>root.classList.add('is-paused'));root.addEventListener('pointerleave',()=>{if(!pinned)root.classList.remove('is-paused')});root.addEventListener('focusin',()=>root.classList.add('is-paused'));root.addEventListener('focusout',()=>{if(!pinned)root.classList.remove('is-paused')});root.addEventListener('click',()=>{pinned=!pinned;root.classList.toggle('is-paused',pinned)});root.addEventListener('touchstart',()=>{pinned=true;root.classList.add('is-paused')},{passive:true});
   });
 })();
-/* JS-driven rail so the gallery keeps moving even when CSS motion is reduced */
-(()=>{document.querySelectorAll('[data-marquee]').forEach(root=>{const track=root.querySelector('.marquee-track');if(!track)return;let offset=0,last=performance.now();const tick=now=>{const half=track.scrollWidth/2;const stopped=root.classList.contains('is-paused')||root.matches(':hover');if(half>0&&!stopped){offset-=((now-last)*0.055);if(offset<=-half)offset+=half;track.style.transform=`translate3d(${offset}px,0,0)`}last=now;requestAnimationFrame(tick)};requestAnimationFrame(tick)})})();
+/* Lazy-load gallery thumbnails and pause their CSS animation offscreen. */
+(()=>{
+  document.querySelectorAll('[data-marquee]').forEach(root=>{
+    const loadImages=()=>root.querySelectorAll('img[data-src]').forEach(img=>{img.src=img.dataset.src;delete img.dataset.src});
+    if('IntersectionObserver' in window){
+      root.classList.add('is-offscreen');
+      const observer=new IntersectionObserver(entries=>{
+        const visible=entries[0].isIntersecting;
+        root.classList.toggle('is-offscreen',!visible);
+        if(visible)loadImages();
+      },{rootMargin:'100px 0px'});
+      observer.observe(root);
+    }else loadImages();
+  });
+})();
 
 /* click any product photo to open it in a focused lightbox */
 (()=>{
@@ -204,7 +225,7 @@
   overlay.innerHTML='<button class="image-lightbox-close" type="button" aria-label="Đóng ảnh">×</button><figure><img alt=""><figcaption></figcaption></figure>';
   document.body.appendChild(overlay);
   const preview=overlay.querySelector('img'),caption=overlay.querySelector('figcaption'),close=()=>{overlay.classList.remove('is-open');overlay.setAttribute('aria-hidden','true');document.body.classList.remove('lightbox-open');sources.forEach(source=>source.closest('[data-carousel]')?.classList.remove('is-lightbox-open'))};
-  const open=source=>{preview.src=source.currentSrc||source.src;preview.alt=source.alt||'';caption.textContent=source.dataset.label||source.alt||'';overlay.classList.add('is-open');overlay.setAttribute('aria-hidden','false');document.body.classList.add('lightbox-open');source.closest('[data-carousel]')?.classList.add('is-lightbox-open')};
+  const open=source=>{preview.src=source.dataset.full||source.currentSrc||source.src;preview.alt=source.alt||'';caption.textContent=source.dataset.label||source.alt||'';overlay.classList.add('is-open');overlay.setAttribute('aria-hidden','false');document.body.classList.add('lightbox-open');source.closest('[data-carousel]')?.classList.add('is-lightbox-open')};
   sources.forEach(source=>{source.tabIndex=0;source.addEventListener('click',event=>{event.stopPropagation();open(source)});source.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open(source)}})});
   overlay.addEventListener('click',event=>{if(event.target===overlay||event.target===overlay.querySelector('.image-lightbox-close'))close()});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&overlay.classList.contains('is-open'))close()});
