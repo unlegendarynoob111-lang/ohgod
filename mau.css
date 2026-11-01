@@ -465,3 +465,5 @@ body.lightbox-open{overflow:hidden}
   .simple-list li.proof-hot .hot-tag{font-size:11px;padding:3px 8px}
   .simple-list li .hot-tag-line{font-size:10px;padding:2px 7px}
 }
+/* Fail-open: keep page content visible if reveal scripting is unavailable. */
+.reveal{opacity:1;transform:none}
